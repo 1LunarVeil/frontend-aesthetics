@@ -1,23 +1,26 @@
 {
   "name": "frontend-aesthetics",
-  "description": "A design skill plus three verification tools: contrast checks, product-type precedents, and a scanner for generic UI defaults.",
+  "description": "A design skill plus five checks and tools: contrast, product-type precedents, an AI-slop scanner, headless capture and screenshot diffing.",
   "owner": {
-    "name": "frontend-aesthetics contributors"
+    "name": "1LunarVeil"
   },
   "plugins": [
     {
       "name": "frontend-aesthetics",
       "source": "./",
       "version": "0.1.1",
-      "description": "Visual decision rules, product precedents, WCAG contrast checks and an AI-slop scanner that complement the frontend-design skill.",
+      "description": "Visual decision rules, product precedents, WCAG contrast checks, an AI-slop scanner and a render-capture-diff loop that complement the frontend-design skill.",
       "displayName": "Frontend Aesthetics",
       "displayName_i18n": {
         "zh-CN": "前端审美"
       },
       "description_i18n": {
-        "zh-CN": "决策规则、产品先例、对比度检查与 AI 味扫描，补充 frontend-design。"
+        "zh-CN": "决策规则、产品先例、对比度检查、AI 味扫描与渲染截图验证，补充 frontend-design。"
       },
-      "category": "developer-tools"
+      "category": "developer-tools",
+      "author": {
+        "name": "1LunarVeil"
+      }
     }
   ]
 }

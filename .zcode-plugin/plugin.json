@@ -1,9 +1,9 @@
 {
   "name": "frontend-aesthetics",
   "version": "0.1.1",
-  "description": "Visual decision rules, product precedents, WCAG contrast checks and an AI-slop scanner that complement the frontend-design skill.",
+  "description": "Visual decision rules, product precedents, WCAG contrast checks, an AI-slop scanner and a render-capture-diff loop that complement the frontend-design skill.",
   "author": {
-    "name": "frontend-aesthetics contributors"
+    "name": "1LunarVeil"
   },
   "license": "MIT",
   "skills": "./skills",

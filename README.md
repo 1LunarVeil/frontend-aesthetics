@@ -58,7 +58,7 @@ This plugin paraphrases and synthesizes others' work, and says so.
 Copy the skill folder so that `SKILL.md` sits directly inside a folder named after the skill:
 
 ```
-git clone https://github.com/<owner>/frontend-aesthetics
+git clone https://github.com/1LunarVeil/frontend-aesthetics
 cp -r frontend-aesthetics/skills/frontend-aesthetics ~/.claude/skills/
 ```
 
@@ -76,13 +76,13 @@ Agents that share folders also see each other's installs: Claude Code and Copilo
 With the `skills` CLI, install from this repository instead of copying:
 
 ```
-npx skills add <owner>/frontend-aesthetics --skill frontend-aesthetics
+npx skills add 1LunarVeil/frontend-aesthetics --skill frontend-aesthetics
 ```
 
 ### Claude Code plugin
 
 ```
-/plugin marketplace add <owner>/frontend-aesthetics
+/plugin marketplace add 1LunarVeil/frontend-aesthetics
 /plugin install frontend-aesthetics@frontend-aesthetics
 ```
 

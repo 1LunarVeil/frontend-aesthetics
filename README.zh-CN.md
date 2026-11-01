@@ -58,7 +58,7 @@
 复制技能目录，确保 `SKILL.md` 的上一级目录名与技能名一致：
 
 ```
-git clone https://github.com/<owner>/frontend-aesthetics
+git clone https://github.com/1LunarVeil/frontend-aesthetics
 cp -r frontend-aesthetics/skills/frontend-aesthetics ~/.claude/skills/
 ```
 
@@ -76,13 +76,13 @@ cp -r frontend-aesthetics/skills/frontend-aesthetics ~/.claude/skills/
 也可以用 `skills` CLI 从仓库直接安装：
 
 ```
-npx skills add <owner>/frontend-aesthetics --skill frontend-aesthetics
+npx skills add 1LunarVeil/frontend-aesthetics --skill frontend-aesthetics
 ```
 
 ### Claude Code 插件
 
 ```
-/plugin marketplace add <owner>/frontend-aesthetics
+/plugin marketplace add 1LunarVeil/frontend-aesthetics
 /plugin install frontend-aesthetics@frontend-aesthetics
 ```
 
