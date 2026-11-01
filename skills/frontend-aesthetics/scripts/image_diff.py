@@ -24,6 +24,10 @@ from pathlib import Path
 
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 CHANNELS = {0: 1, 2: 3, 3: 1, 4: 2, 6: 4}
+# A screenshot is far below these; the limits exist so a malformed or hostile
+# file cannot make the decoder allocate an unbounded amount of memory.
+MAX_PIXELS = 40_000_000
+MAX_RAW_BYTES = 160_000_000
 
 
 class Unsupported(Exception):
@@ -70,8 +74,21 @@ def decode_png(path):
 
     channels = CHANNELS[color_type]
     stride = width * channels
-    raw = zlib.decompress(bytes(idat))
     expected = (stride + 1) * height
+    if width * height > MAX_PIXELS:
+        raise Unsupported(
+            f"{width}x{height} exceeds the {MAX_PIXELS}-pixel limit"
+        )
+    if expected > MAX_RAW_BYTES:
+        raise Unsupported(
+            f"scanline data would be {expected} bytes, above the {MAX_RAW_BYTES}-byte limit"
+        )
+    # Bound the output while inflating. Checking the length afterwards is too
+    # late: a 65 KB file here expanded to 64 MB before any check could run.
+    inflater = zlib.decompressobj()
+    raw = inflater.decompress(bytes(idat), expected)
+    if inflater.unconsumed_tail or not inflater.eof:
+        raise Unsupported("image data larger than the declared dimensions (decompression bomb)")
     if len(raw) < expected:
         raise Unsupported("truncated image data")
 

@@ -8,7 +8,7 @@
     {
       "name": "frontend-aesthetics",
       "source": "./",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "description": "Visual decision rules, product precedents, WCAG contrast checks, an AI-slop scanner and a render-capture-diff loop that complement the frontend-design skill.",
       "displayName": "Frontend Aesthetics",
       "displayName_i18n": {

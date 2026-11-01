@@ -2,6 +2,18 @@
 
 All notable changes to this project are recorded here. The format follows Keep a Changelog, and versions follow Semantic Versioning.
 
+## [0.1.2] - 2026-11-02
+
+Security fix, found by a manual audit of the release repository.
+
+### Fixed
+
+- **`image_diff.py` could be made to exhaust memory with a tiny input.** A 65 KB PNG declaring a 1x1 image inflated to 64 MB and was accepted, because `zlib.decompress()` ran without an output bound and the size check happened afterwards. Decoding now checks the declared dimensions against a 40-million-pixel limit and the expected scanline size against a 160 MB limit before inflating, and inflates with `decompressobj().decompress(data, max_length)` so excess output is never produced. Two tests pin it, and both fail against the old implementation.
+
+### Added
+
+- `SECURITY.md` documents the bounds and records this defect, rather than describing the decoder as safe without evidence.
+
 ## [0.1.1] - 2026-11-01
 
 This is a correction to the 0.1.0 release, not a feature jump. It closes a gap the first release documented instead of implementing, and it makes the plugin's limits and lineage explicit before public release.

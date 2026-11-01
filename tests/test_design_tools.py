@@ -183,6 +183,60 @@ class ImageDiffTests(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("not a PNG", out)
 
+    def test_decompression_bomb_is_rejected_before_inflating(self):
+        """A tiny file must not be able to inflate past the declared size.
+
+        Reproduced before the fix: a 65 KB PNG declared 1x1 inflated to 64 MB
+        and was accepted, because the length check ran after decompression.
+        """
+        import struct
+        import time
+        import zlib
+
+        payload = b"\x00" * (32 * 1024 * 1024)
+        compressed = zlib.compress(payload, 9)
+        header = struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0)
+
+        def chunk(kind, body):
+            return (struct.pack(">I", len(body)) + kind + body
+                    + struct.pack(">I", zlib.crc32(kind + body) & 0xFFFFFFFF))
+
+        bomb = FIXTURES / "png" / "bomb.png"
+        bomb.write_bytes(
+            b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", header)
+            + chunk(b"IDAT", compressed) + chunk(b"IEND", b"")
+        )
+        try:
+            started = time.time()
+            with self.assertRaises(image_diff.Unsupported) as caught:
+                image_diff.decode_png(bomb)
+            elapsed = time.time() - started
+            self.assertIn("decompression bomb", str(caught.exception))
+            self.assertLess(elapsed, 2.0, "rejection must not decompress the payload first")
+        finally:
+            bomb.unlink(missing_ok=True)
+
+    def test_declared_dimensions_above_the_pixel_limit_are_rejected(self):
+        import struct
+        import zlib
+        header = struct.pack(">IIBBBBB", 200_000, 200_000, 8, 2, 0, 0, 0)
+
+        def chunk(kind, body):
+            return (struct.pack(">I", len(body)) + kind + body
+                    + struct.pack(">I", zlib.crc32(kind + body) & 0xFFFFFFFF))
+
+        huge = FIXTURES / "png" / "huge.png"
+        huge.write_bytes(
+            b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", header)
+            + chunk(b"IDAT", zlib.compress(b"\x00" * 16)) + chunk(b"IEND", b"")
+        )
+        try:
+            with self.assertRaises(image_diff.Unsupported) as caught:
+                image_diff.decode_png(huge)
+            self.assertIn("pixel limit", str(caught.exception))
+        finally:
+            huge.unlink(missing_ok=True)
+
 
 class VisualCaptureUrlTests(unittest.TestCase):
     def test_option_like_url_is_rejected(self):

@@ -20,6 +20,16 @@ This plugin executes Python on your machine when an agent calls its scripts. Bei
 
 No script reads environment secrets, writes outside the capture directory, or edits source files.
 
+## Resource limits in the PNG decoder
+
+`image_diff.py` reads PNG files that may come from anywhere, so decoding is bounded:
+
+- The declared dimensions are checked against a 40-million-pixel limit before any inflation.
+- The expected scanline size is checked against a 160 MB limit before any inflation.
+- Inflation uses `zlib.decompressobj().decompress(data, max_length)` with the declared size as the bound, so excess output is never produced. Exceeding it is reported as a decompression bomb.
+
+This was a real defect, not a hypothetical one. Before 0.1.2, a 65 KB PNG declaring a 1x1 image inflated to 64 MB and was accepted, because the length check ran only after decompression. It was found by a manual review that reproduced it; the fix is pinned by `test_decompression_bomb_is_rejected_before_inflating` and `test_declared_dimensions_above_the_pixel_limit_are_rejected`, both of which fail against the old implementation.
+
 ## Reporting a vulnerability
 
 Open a private security advisory through the repository's **Security** tab, or email the maintainer listed in the repository profile. Do not open a public issue for a vulnerability.
