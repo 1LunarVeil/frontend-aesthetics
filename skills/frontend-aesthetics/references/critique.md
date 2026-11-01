@@ -8,8 +8,11 @@ State the target: a file, a directory, a URL or screenshots. Read the project's 
 
 ## 2. Capture
 
-- If a browser tool is available (for example Playwright MCP or the browser-use plugin), capture the main screens at the app's default window size and at a narrow size (800 by 600 for desktop, 390 by 844 for web). Capture the dark theme too when the app has one. List the states you captured: default, empty, error, loading.
-- If no browser tool is available, say that the review is code-only, and make no claims about rendering, spacing as seen, or colour as seen.
+Use `references/visual-review.md`. In short: get the UI renderable, capture with `scripts/visual_capture.py` (it waits for two identical frames, so a half-rendered shell is not mistaken for a design), and look at the images. At minimum, capture the default, narrow and 150%-scale views; add empty, loading and error states and the dark theme when they exist.
+
+Console errors count as failures. A `blank` capture counts as a failure. An unsettled capture is suspect.
+
+Only when no browser can be reached at all, say "not visually verified", list the states you skipped, and make no claims about rendering, density or colour as seen. Do not replace the capture with a description of what the code should produce.
 
 ## 3. Mechanical checks
 
@@ -56,11 +59,24 @@ Polish
 
 After the list, give:
 
+- A Visual section in the format from `visual-review.md`, with the captures you looked at and the states you skipped.
 - Top three changes, ordered by how much they would move the design.
 - What was not checked, and why (for example, no browser available, or no dark-theme capture).
 
 Do not list praise. Do not list more than about 30 findings; if there are more, say so and group them by file.
 
-## 7. Before reporting
+## 7. After a change: close the loop
 
-Read the findings once more against the nine pillars. Remove any finding you cannot support with a location and evidence. Keep blocking findings; they are not optional.
+When you apply a fix, do not report it as done from the diff alone. Capture the same views again to a second directory, then compare:
+
+```
+python scripts/image_diff.py shots/wide-1440x900-light@1.png shots2/wide-1440x900-light@1.png
+```
+
+- The changed region should cover what you claim to have changed. If it does not, the change did not reach the render.
+- If the diff is empty, the claim is false. Say so.
+- Look at the new capture too. A diff proves something changed; only your eyes prove it changed for the better.
+
+## 8. Before reporting
+
+Read the findings once more against the nine pillars. Remove any finding you cannot support with a location and evidence. Keep blocking findings; they are not optional. If a visual claim has no capture behind it, delete the claim.

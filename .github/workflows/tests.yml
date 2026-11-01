@@ -51,3 +51,23 @@ jobs:
         shell: bash
         run: |
           python skills/frontend-aesthetics/scripts/design_lookup.py "portfolio" | grep -q "# Detail: Portfolio/Personal"
+
+      - name: Image diff finds the exact changed region
+        shell: bash
+        run: |
+          python tests/make_fixtures.py
+          python skills/frontend-aesthetics/scripts/image_diff.py \
+            tests/fixtures/png/flat.png tests/fixtures/png/box.png | tee /tmp/diff.txt
+          grep -q "changed 480 px (18.75%), region x=10 y=8 30x16" /tmp/diff.txt
+
+      - name: Capture tool rejects an unsafe URL
+        shell: bash
+        run: |
+          set +e
+          python skills/frontend-aesthetics/scripts/visual_capture.py \
+            "file:///etc/passwd" --out "$RUNNER_TEMP/shots"
+          status=$?
+          if [ "$status" -ne 3 ]; then
+            echo "expected exit status 3 for a rejected URL, got $status"
+            exit 1
+          fi

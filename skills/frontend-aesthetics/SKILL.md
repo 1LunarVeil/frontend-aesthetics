@@ -1,6 +1,6 @@
 ---
 name: frontend-aesthetics
-description: Visual decisions for web and desktop UI (direction, palette, type, layout, density, motion, states), with product precedents, WCAG contrast checks and a scanner for generic "AI slop" tells and craft defects. Use alongside frontend-design when building, restyling or reviewing a UI, choosing colors or fonts, or critiquing visual quality.
+description: Visual decisions and visual verification for web and desktop UI (direction, palette, type, layout, density, motion, states). Ships product precedents, WCAG contrast checks, a scanner for generic "AI slop" tells, and a render-capture-diff loop that proves what a change did to the screen. Use alongside frontend-design when building, restyling or reviewing a UI, choosing colors or fonts, or critiquing visual quality.
 ---
 
 # Frontend aesthetics
@@ -45,10 +45,14 @@ Cover every state, not only the happy path (`references/components-and-states.md
 
 ## 7. Verify before reporting
 
+- Render it and look. `python scripts/visual_capture.py <url> --out shots --matrix` gives default, 150%-scale, narrow and phone views, waits for a settled frame, and reports console errors. Read `references/visual-review.md`; a review without a capture is not a visual review.
+- After a change, capture again and run `scripts/image_diff.py before.png after.png`. If the changed region does not match what you claim to have changed, the claim is wrong.
 - `python scripts/slop_scan.py <changed paths>`. Exit status 1 means blocking findings.
 - Contrast for every text and UI pair you actually shipped (`wcag.py`).
 - A keyboard-only pass, a reduced-motion pass, and the break test with worst-case data.
-- Screenshots when a browser tool is available (`references/critique.md`). If none is available, say that the review was code-only.
+- Console errors are failures. So is a capture reported as `blank`; treat one reported as unsettled as suspect.
+
+When no browser can be reached, write "not visually verified", name the states you skipped, and claim nothing about what the rendered UI looks like.
 
 ## 8. Report
 
@@ -87,6 +91,7 @@ Every default (font, palette, radius, shadow, layout, icon set) must be chosen f
 - `references/desktop-app.md`: rules for WebView and desktop apps.
 - `references/anti-slop.md`: tells, why they read as defaults, questions to ask, scanner rule IDs.
 - `references/critique.md`: review procedure, nine pillars, severity, output format.
+- `references/visual-review.md`: how to render, capture, read and re-diff the UI.
 - `references/sources.md`: where each rule came from and what was deliberately not used.
-- `scripts/wcag.py`, `scripts/design_lookup.py`, `scripts/slop_scan.py`: read-only, standard library only, no network. Use `py -3` if `python` is not on PATH.
+- `scripts/wcag.py`, `scripts/design_lookup.py`, `scripts/slop_scan.py`, `scripts/visual_capture.py`, `scripts/image_diff.py`: read-only, no third-party packages, no network. Use `py -3` if `python` is not on PATH.
 - `data/`: MIT-licensed CSV data vendored from ui-ux-pro-max (see `data/PROVENANCE.md`).
