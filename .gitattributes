@@ -1,0 +1,15 @@
+# Keep text files LF so checksums and the vendored data stay byte-identical.
+* text=auto eol=lf
+
+*.csv text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.txt text eol=lf
+*.css eol=lf
+*.html text eol=lf
+
+# Editors and OS metadata stay untouched.
+*.png binary
+*.ico binary
