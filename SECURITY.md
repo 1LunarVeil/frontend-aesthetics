@@ -32,7 +32,7 @@ This was a real defect, not a hypothetical one. Before 0.1.2, a 65 KB PNG declar
 
 ## Reporting a vulnerability
 
-Open a private security advisory through the repository's **Security** tab, or email the maintainer listed in the repository profile. Do not open a public issue for a vulnerability.
+Open a private security advisory through the repository's **Security** tab, or email LunarVeil666@outlook.com. Do not open a public issue for a vulnerability.
 
 Please include: the script involved, the exact command, the input that triggers it, and what you expected instead. A reproduction matters more than a severity label.
 
