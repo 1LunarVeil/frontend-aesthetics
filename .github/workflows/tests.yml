@@ -14,14 +14,27 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python: ["3.9", "3.12"]
+        include:
+          # ubuntu-latest moved to Ubuntu 26.04 in October 2026, and
+          # actions/python-versions has no Python 3.9 build for 26.04 yet.
+          # Pin 24.04 so the oldest supported Python is actually exercised.
+          - os: ubuntu-24.04
+            python: "3.9"
+          - os: ubuntu-24.04
+            python: "3.12"
+          - os: windows-latest
+            python: "3.9"
+          - os: windows-latest
+            python: "3.12"
+          - os: macos-latest
+            python: "3.9"
+          - os: macos-latest
+            python: "3.12"
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
-        with:
+      - uses: actions/setup-python@v6        with:
           python-version: ${{ matrix.python }}
 
       - name: Unit tests
