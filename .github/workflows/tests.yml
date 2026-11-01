@@ -1,0 +1,53 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.9", "3.12"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Unit tests
+        run: python -B -m unittest discover -s tests -v
+
+      - name: Scanner finds the planted defects
+        shell: bash
+        run: |
+          set +e
+          python skills/frontend-aesthetics/scripts/slop_scan.py tests/fixtures/tells/index.html
+          status=$?
+          if [ "$status" -ne 1 ]; then
+            echo "expected exit status 1 for the tells fixture, got $status"
+            exit 1
+          fi
+
+      - name: Scanner stays quiet on clean code
+        run: python skills/frontend-aesthetics/scripts/slop_scan.py tests/fixtures/clean/app.css
+
+      - name: Reference contrast values
+        shell: bash
+        run: |
+          python skills/frontend-aesthetics/scripts/wcag.py "#000000" "#ffffff" | tee /tmp/wcag.txt
+          grep -q "21.00:1" /tmp/wcag.txt
+
+      - name: Lookup resolves a product type
+        shell: bash
+        run: |
+          python skills/frontend-aesthetics/scripts/design_lookup.py "portfolio" | grep -q "# Detail: Portfolio/Personal"

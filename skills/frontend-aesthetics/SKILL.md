@@ -1,0 +1,92 @@
+---
+name: frontend-aesthetics
+description: Visual decisions for web and desktop UI (direction, palette, type, layout, density, motion, states), with product precedents, WCAG contrast checks and a scanner for generic "AI slop" tells and craft defects. Use alongside frontend-design when building, restyling or reviewing a UI, choosing colors or fonts, or critiquing visual quality.
+---
+
+# Frontend aesthetics
+
+frontend-design sets the stance: commit to a direction and avoid defaults nobody chose. This skill supplies the decision rules, the numbers, the precedent data and the checks that make those choices verifiable. Open the reference a step names when you need it; do not read them all up front.
+
+## 1. Read the project's rules first
+
+- Look for a brief or contract before designing: `DESIGN.md`, `PRODUCT.md`, a token file (`tokens.css`, `theme.*`, `tailwind.config.*`), or a contract document such as `FRONTEND_CONTRACT.md`. These outrank the defaults in this skill.
+- If the project routes visual values through tokens, a new raw hex, px or rgba value in a component is a finding, not a style choice.
+- Keep what already works: theme switching, i18n keys, accessibility behaviour, existing components. Restyle the scope that was asked for, not the whole app.
+
+## 2. Brief
+
+Write the brief described in `references/principles.md`: subject, audience and context, the job of the main screen, density, languages, and the five dimensions (typography, color, layout, motion, details). Add three refusals: defaults this design must not look like. If the user has not described a taste, propose one direction and say why. Do not interrogate the user.
+
+## 3. Precedents
+
+Run this from the skill's base directory:
+
+```
+python scripts/design_lookup.py "saas dashboard dark" --ux --motion
+```
+
+Use English keywords. The output gives the matching product type, its styles, a palette with contrast-checked text and UI pairs, typography pairings and reasoning rules. Treat it as evidence, not an answer. Its first style is often a trend pick (glassmorphism, neon, bento) that is wrong for dense tools. Text pairs fail in only one of the 192 palette rows, but most palettes have a border below 3:1 against the background, so every palette needs its UI pairs checked before use.
+
+## 4. Direction
+
+Choose one direction from `references/directions.md`, or define your own, and state why it fits this brief and why the nearest alternative does not. Spend boldness in one place: one signature element. Everything around it is disciplined.
+
+## 5. Tokens before components
+
+Define color roles, the type scale, spacing, radii, elevation and motion durations as variables first (`references/color-and-type.md`, `references/layout-and-motion.md`). Check every text pair you ship:
+
+```
+python scripts/wcag.py "#1f2937" "#ffffff" "#556070" "#f6f7f9"
+```
+
+## 6. Build
+
+Cover every state, not only the happy path (`references/components-and-states.md`). Keep copy in the product's languages and test the longest translation.
+
+## 7. Verify before reporting
+
+- `python scripts/slop_scan.py <changed paths>`. Exit status 1 means blocking findings.
+- Contrast for every text and UI pair you actually shipped (`wcag.py`).
+- A keyboard-only pass, a reduced-motion pass, and the break test with worst-case data.
+- Screenshots when a browser tool is available (`references/critique.md`). If none is available, say that the review was code-only.
+
+## 8. Report
+
+Name the direction and the reason for it, give the token block, and list each verification with its command and result. List what was not verified.
+
+## Floors (never trade these for looks)
+
+- Text contrast of at least 4.5:1. Large text (24px, or 18.66px bold) and UI boundaries or focus indicators need at least 3:1.
+- Every interactive element has a visible keyboard focus indicator that differs from its hover state.
+- Color never carries meaning on its own.
+- Motion honours `prefers-reduced-motion`. Nothing flashes more than three times per second.
+- Body text is at least 16px on the web and 14px in dense desktop UI. No text under 12px.
+- Every state exists: loading, empty, error, disabled and partial data.
+- No placeholder copy ships. Errors say what happened and what to do next.
+- Text survives the longest realistic string: translations, CJK, long paths and model names.
+
+## Taste rules
+
+- One dominant neutral does most of the work. One accent covers at most about 10% of the screen. Success, warning and danger colors stay fixed across themes.
+- Two type families at most, plus a mono face if needed. One scale ratio. Hierarchy comes from size, weight, color and space before boxes.
+- Fewer borders and fewer nested cards. Radius from one small scale. Shadows tinted to the palette, with at most three elevation levels.
+- Motion: one purposeful moment per screen, transform and opacity only, and no animation on actions repeated many times in a session.
+- Copy: sentence case, plain verbs, and the same name for an action in the button, the result message and the menu.
+
+## The choice test
+
+Every default (font, palette, radius, shadow, layout, icon set) must be chosen for this brief. If you cannot name the reason, change it. A default you chose is not a tell. `references/anti-slop.md` lists the common tells and the scanner rule that flags each one.
+
+## Files
+
+- `references/principles.md`: decision order, brief template, refusals.
+- `references/directions.md`: nine directions with verified starting tokens.
+- `references/color-and-type.md`: palettes, dark mode, contrast, type scale, font loading, CJK.
+- `references/layout-and-motion.md`: grid, density, spacing, radii, elevation, motion.
+- `references/components-and-states.md`: components, state matrix, copy, break test.
+- `references/desktop-app.md`: rules for WebView and desktop apps.
+- `references/anti-slop.md`: tells, why they read as defaults, questions to ask, scanner rule IDs.
+- `references/critique.md`: review procedure, nine pillars, severity, output format.
+- `references/sources.md`: where each rule came from and what was deliberately not used.
+- `scripts/wcag.py`, `scripts/design_lookup.py`, `scripts/slop_scan.py`: read-only, standard library only, no network. Use `py -3` if `python` is not on PATH.
+- `data/`: MIT-licensed CSV data vendored from ui-ux-pro-max (see `data/PROVENANCE.md`).

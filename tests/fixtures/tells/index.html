@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<style>
+  :root { --brand: #5b3df5; }
+  body { font-family: Inter, sans-serif; background: #000; color: #111; }
+  .hero { background: linear-gradient(135deg, #8b5cf6, #3b82f6); }
+  .eyebrow { text-transform: uppercase; font-size: 10px; }
+  .card { border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: all 0.3s; }
+  .card:hover { transform: translateY(-4px); }
+  button { outline: none; }
+  .meta { color: #6b7280; }
+  .a { color: #1f2937; } .b { color: #374151; } .c { color: #4b5563; } .d { color: #9ca3af; }
+  .e { color: #d1d5db; } .f { background: #f9fafb; } .g { border: 1px solid #e5e7eb; } .h { color: #111827; }
+  .reveal { animation: fadeInUp 0.6s ease both; }
+  @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; } }
+  .tiny { font-size: 11px; }
+</style>
+</head>
+<body>
+<p class="eyebrow">Get started · Product · 2026</p>
+<img src="hero.png">
+<img src="logo.svg" alt="">
+<h1 class="reveal">Lorem ipsum dolor sit amet</h1>
+<div class="error">Oops, something went wrong.</div>
+<form>
+  <input value="x" tabindex="3">
+  <button class="card">Submit</button>
+  <button>Continue →</button>
+</form>
+</body>
+</html>
