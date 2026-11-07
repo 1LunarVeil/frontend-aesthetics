@@ -1,0 +1,13 @@
+/* Fixture for token_lint: raw values that should be tokens. */
+.card {
+  background: var(--color-muted);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.badge {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: #123456;
+}

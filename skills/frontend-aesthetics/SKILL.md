@@ -1,11 +1,11 @@
 ---
 name: frontend-aesthetics
-description: Visual decisions and visual verification for web and desktop UI (direction, palette, type, layout, density, motion, states). Ships product precedents, WCAG contrast checks, a scanner for generic "AI slop" tells, and a render-capture-diff loop that proves what a change did to the screen. Use alongside frontend-design when building, restyling or reviewing a UI, choosing colors or fonts, or critiquing visual quality.
+description: Visual decisions and visual verification for web and desktop UI (direction, palette, type, layout, density, motion, states). Ships product precedents (Chinese and English keywords), WCAG and draft-APCA contrast checks, a token-file linter, a rendered-page contrast audit, color-vision simulation, a scanner for generic "AI slop" tells, and a CDP render-capture-diff loop that proves what a change did to the screen, dark theme and interaction states included. Use alongside frontend-design when building, restyling or reviewing a UI, choosing colors or fonts, or critiquing visual quality.
 ---
 
 # Frontend aesthetics
 
-frontend-design sets the stance: commit to a direction and avoid defaults nobody chose. This skill supplies the decision rules, the numbers, the precedent data and the checks that make those choices verifiable. Open the reference a step names when you need it; do not read them all up front.
+frontend-design sets the stance: commit to a direction and avoid defaults nobody chose. This skill supplies the decision rules, the numbers, the precedent data and the checks that make those choices verifiable. If `frontend-design` is not installed, this skill stands alone: nothing in it depends on that skill being present. Open the reference a step names when you need it; do not read them all up front.
 
 ## 1. Read the project's rules first
 
@@ -25,6 +25,8 @@ Run this from the skill's base directory:
 python scripts/design_lookup.py "saas dashboard dark" --ux --motion
 ```
 
+Chinese keywords work too ("暗色 仪表盘"); mapped terms are printed as a trace. When the product displays data, also pass `--charts`.
+
 Use English keywords. The output gives the matching product type, its styles, a palette with contrast-checked text and UI pairs, typography pairings and reasoning rules. Treat it as evidence, not an answer. Its first style is often a trend pick (glassmorphism, neon, bento) that is wrong for dense tools. Text pairs fail in only one of the 192 palette rows, but most palettes have a border below 3:1 against the background, so every palette needs its UI pairs checked before use.
 
 ## 4. Direction
@@ -33,10 +35,11 @@ Choose one direction from `references/directions.md`, or define your own, and st
 
 ## 5. Tokens before components
 
-Define color roles, the type scale, spacing, radii, elevation and motion durations as variables first (`references/color-and-type.md`, `references/layout-and-motion.md`). Check every text pair you ship:
+Define color roles, the type scale, spacing, radii, elevation and motion durations as variables first (`references/color-and-type.md`, `references/layout-and-motion.md`). Check every text pair you ship, and lint the token file itself:
 
 ```
 python scripts/wcag.py "#1f2937" "#ffffff" "#556070" "#f6f7f9"
+python scripts/token_lint.py <source paths>
 ```
 
 ## 6. Build
@@ -45,10 +48,11 @@ Cover every state, not only the happy path (`references/components-and-states.md
 
 ## 7. Verify before reporting
 
-- Render it and look. `python scripts/visual_capture.py <url> --out shots --matrix` gives default, 150%-scale, narrow and phone views, waits for a settled frame, and reports console errors. Read `references/visual-review.md`; a review without a capture is not a visual review.
+- Render it and look. `python scripts/visual_capture.py <url> --out shots --matrix` gives default, 150%-scale, narrow and phone views, waits for a settled frame, and reports console errors. Over CDP, `--dark` really emulates `prefers-color-scheme`, and `--full-page`, `--element`, `--hover`, `--focus` reach the states the plain screenshots cannot. Read `references/visual-review.md`; a review without a capture is not a visual review.
 - After a change, capture again and run `scripts/image_diff.py before.png after.png`. If the changed region does not match what you claim to have changed, the claim is wrong.
 - `python scripts/slop_scan.py <changed paths>`. Exit status 1 means blocking findings.
-- Contrast for every text and UI pair you actually shipped (`wcag.py`).
+- `python scripts/token_lint.py <paths>` audits the token file and raw-value leaks.
+- Contrast for every text and UI pair you actually shipped (`wcag.py`; `--apca` adds a draft supplementary reading). When the page can be served, `python scripts/page_audit.py <url>` audits every visible pair in the render and separates measurable verdicts from uncertain ones.
 - A keyboard-only pass, a reduced-motion pass, and the break test with worst-case data.
 - Console errors are failures. So is a capture reported as `blank`; treat one reported as unsettled as suspect.
 
@@ -93,5 +97,5 @@ Every default (font, palette, radius, shadow, layout, icon set) must be chosen f
 - `references/critique.md`: review procedure, nine pillars, severity, output format.
 - `references/visual-review.md`: how to render, capture, read and re-diff the UI.
 - `references/sources.md`: where each rule came from and what was deliberately not used.
-- `scripts/wcag.py`, `scripts/design_lookup.py`, `scripts/slop_scan.py`, `scripts/visual_capture.py`, `scripts/image_diff.py`: read-only, no third-party packages, no network. Use `py -3` if `python` is not on PATH.
+- `scripts/wcag.py`, `scripts/design_lookup.py`, `scripts/slop_scan.py`, `scripts/token_lint.py`, `scripts/visual_capture.py`, `scripts/image_diff.py`, `scripts/color_sim.py`, `scripts/cdp.py`, `scripts/page_audit.py`: read-only, no third-party packages, no network (the capture and audit tools talk to a loopback browser you already have). Use `py -3` if `python` is not on PATH.
 - `data/`: MIT-licensed CSV data vendored from ui-ux-pro-max (see `data/PROVENANCE.md`).

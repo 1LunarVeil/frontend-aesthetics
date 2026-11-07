@@ -3,6 +3,11 @@
 Usage:
   python image_diff.py A.png B.png [--json] [--threshold N]
   python image_diff.py A.png --stats [--json]
+  python image_diff.py BASELINE_DIR CURRENT_DIR [--json]
+
+Baseline mode: with two directories, every PNG in CURRENT_DIR is compared
+against the same-named file in BASELINE_DIR; files present on only one side
+and files that cannot be decoded are reported per pair instead of aborting.
 
 Why hand-rolled: Pillow is not available on every machine, and installing a
 dependency to answer "did this frame change" is not worth it. PNG is a zlib
@@ -213,6 +218,54 @@ def diff(first, second):
     }
 
 
+def baseline_report(baseline_dir, current_dir):
+    """Compare every PNG in current_dir against the same-named file in baseline_dir.
+
+    One unreadable or undecodable file becomes one errored pair; the rest of
+    the directory still reports. Never a gate: the summary counts changes,
+    it does not fail on them.
+    """
+    baseline = {p.name: p for p in sorted(Path(baseline_dir).glob("*.png"))}
+    current = {p.name: p for p in sorted(Path(current_dir).glob("*.png"))}
+    pairs = []
+    summary = {"identical": 0, "changed": 0, "not_comparable": 0,
+               "error": 0, "missing_baseline": 0, "missing_current": 0}
+    for name in sorted(set(baseline) | set(current)):
+        base, curr = baseline.get(name), current.get(name)
+        if curr is None:
+            pairs.append({"name": name, "status": "missing_current"})
+            summary["missing_current"] += 1
+            continue
+        if base is None:
+            pairs.append({"name": name, "status": "missing_baseline"})
+            summary["missing_baseline"] += 1
+            continue
+        try:
+            result = diff(base, curr)
+        except (Unsupported, OSError, zlib.error) as exc:
+            pairs.append({"name": name, "status": "error", "reason": str(exc)})
+            summary["error"] += 1
+            continue
+        if not result.get("comparable"):
+            pairs.append({"name": name, "status": "not_comparable", "reason": result.get("reason")})
+            summary["not_comparable"] += 1
+        elif result["identical"]:
+            pairs.append({"name": name, "status": "identical"})
+            summary["identical"] += 1
+        else:
+            pairs.append({
+                "name": name, "status": "changed",
+                "changed_pixels": result["changed_pixels"],
+                "changed_ratio": result["changed_ratio"],
+                "bounding_box": result["bounding_box"],
+            })
+            summary["changed"] += 1
+    return {
+        "mode": "baseline", "baseline": str(baseline_dir), "current": str(current_dir),
+        "pairs": pairs, "summary": summary,
+    }
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="PNG stats and diff with no dependencies.")
     parser.add_argument("first")
@@ -221,6 +274,35 @@ def main(argv=None):
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
+    first_is_dir = Path(args.first).is_dir()
+    second_is_dir = bool(args.second) and Path(args.second).is_dir()
+    if first_is_dir or second_is_dir:
+        if not (first_is_dir and second_is_dir):
+            parser.error("baseline mode needs two directories: BASELINE_DIR CURRENT_DIR")
+        result = baseline_report(args.first, args.second)
+        if args.json:
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+            return 0
+        for pair in result["pairs"]:
+            if pair["status"] == "changed":
+                box = pair["bounding_box"]
+                print(f"{pair['name']}: changed {pair['changed_pixels']} px "
+                      f"({pair['changed_ratio']:.2%}), "
+                      f"region x={box['x']} y={box['y']} {box['width']}x{box['height']}")
+            elif pair["status"] == "not_comparable":
+                print(f"{pair['name']}: not comparable: {pair['reason']}")
+            elif pair["status"] == "error":
+                print(f"{pair['name']}: error: {pair['reason']}")
+            else:
+                print(f"{pair['name']}: {pair['status']}")
+        summary = result["summary"]
+        print(f"pairs: {summary['identical']} identical, {summary['changed']} changed, "
+              f"{summary['not_comparable']} not comparable, {summary['error']} error, "
+              f"{summary['missing_baseline']} only in baseline, "
+              f"{summary['missing_current']} only in current")
+        print("review aid, not a gate: a changed pair proves change, not improvement")
+        return 0
 
     try:
         if args.stats or not args.second:

@@ -26,6 +26,10 @@ Each rule in this skill was either checked against a standard, measured with the
 
 7. "Make Interfaces Beautiful with LLMs and Skills", Learning AI (aiecos), https://learning.aiecos.ai/en/stage-2/frontend/llm-skills-beautiful/. Used for the five-dimension vocabulary (typography, color, layout, motion, details) in the brief, and for the principle that a named aesthetic direction beats a generic prompt. Caveats: several example templates in the chapter (Inter for body text, grey shadows, a glassmorphism recipe) are the defaults this skill warns against, so none was adopted. The URL ending in `/plugin-creator` returns 404 on the English site; the skill-creation material is in the chapter's section 6, "Create your own design system skill".
 
+8. APCA 0.0.98G-4g, Andrew Somers / Myndex, https://github.com/Myndex/apca-w3 (W3-collaboration license). Used for the supplementary `--apca` output in `scripts/wcag.py`: the SA98G constants and the BoW/WoB branch structure were quoted verbatim from `src/apca-w3.js` and the anchors re-derived (black on white +106.0, white on black −107.9, #767676 on white +71.6). Status: APCA is a draft and this output is supplementary only — the WCAG 2.2 ratios in the same line remain the only gate. Not used: the font-size/weight lookup table interpolation and the full ARC criterion; the printed guidance compresses the published Lc levels (90/75/60/45/30/15) into one label.
+
+9. Machado, Oliveira and Fernandes, "A Physiologically-based Model for Simulation of Color Vision Deficiency", IEEE Computer Graphics and Applications 29(1), 2009, https://www.inf.ufrgs.br/~oliveira/pubs_files/CVD_Simulation/CVD_Simulation.html. Used for the severity-10 (full dichromacy) protanopia, deuteranopia and tritanopia matrices in `scripts/color_sim.py`, applied in linear RGB as the model requires. Not used: the ten partial-severity interpolation tables and the bisector-correction variants. Grey invariance (the matrix rows sum to 1) is pinned by a test; pure red under deuteranopia lands in the olive range, which is the behavior the palette checker relies on when it warns that a hue pair has collapsed.
+
 ## Deliberately not used
 
 - Icon, font-catalogue and CDN metadata, and any stack-specific code (React, Next.js, Tailwind, Figma plugin APIs). They do not match a vanilla or desktop WebView UI.
@@ -35,6 +39,8 @@ Each rule in this skill was either checked against a standard, measured with the
 ## Verification
 
 - Contrast values in `directions.md` were computed with `scripts/wcag.py`, which was checked against reference values: black on white 21.00:1, #767676 on white 4.54:1, #777777 on white 4.48:1, and pure red on white 4.00:1.
+- The APCA implementation reproduces the anchors derived from the quoted source (black on white +106.0, white on black −107.9, #767676 on white +71.6) and follows the sign convention: dark text on light is positive.
+- The Machado matrices are pinned by grey-invariance (every matrix row sums to 1, so greys survive) and by the red-under-deuteranopia anchor (pure red lands near #a39000, in the olive range).
 - Scanner rules were checked against `tests/fixtures/` and against a real frontend, where they produced the findings they describe.
 - The capture rules in `visual-review.md` are not theory. On a real app, a fixed 4-second wait captured a half-rendered shell (204 colours, 12 KB) at one window size while a longer wait captured the same page complete (837 colours, 61 KB), and a 390px viewport needed three attempts to settle. Those numbers are why the tool requires two identical frames instead of a delay, and why the blank test counts colours instead of file size.
 

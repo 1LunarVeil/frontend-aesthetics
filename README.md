@@ -24,7 +24,11 @@ Concretely, it changes four things about how an agent works on UI:
 | Look up precedents for a product type | `scripts/design_lookup.py` over eight vendored datasets, with palettes auto contrast-checked |
 | Find generic "AI slop" tells and craft defects in code | `scripts/slop_scan.py`, 20 checks (17 line rules plus focus, reduced-motion and raw-colour checks), severity-ranked, exit 1 on blocking |
 | Capture the real rendered UI at several sizes and scales | `scripts/visual_capture.py`, waits for a settled frame, reports console errors and blank frames |
-| Prove what a change actually did to the screen | `scripts/image_diff.py`, zero-dependency PNG decode, changed region and ratio |
+| Capture dark theme, full page, element and hover/focus states | `scripts/visual_capture.py` over CDP: real `prefers-color-scheme` emulation, clipped and interaction views; falls back to plain screenshots and says so |
+| Audit the token file and raw-value leaks | `scripts/token_lint.py`: definition-site contrast, `RAW-LEAK`, missing semantic roles, unused tokens, off-scale values |
+| Audit every visible text pair in the rendered page | `scripts/page_audit.py`: measurable verdicts separated from uncertain ones (gradients, images, occlusion) |
+| Read contrast through a draft lens; test hue-dependent meaning | `wcag.py --apca` (draft APCA Lc, supplementary) and `scripts/color_sim.py` (Machado 2009 CVD simulation with a pair-collapse check) |
+| Prove what a change actually did to the screen | `scripts/image_diff.py`, zero-dependency PNG decode, changed region and ratio, plus a baseline directory report |
 | Review an existing UI and get prioritized findings | `references/critique.md` (nine pillars) and `/design-review` |
 | Apply the rules inside a desktop or WebView app | `references/desktop-app.md` |
 
@@ -50,6 +54,13 @@ This plugin paraphrases and synthesizes others' work, and says so.
 - Per-item detail, including what was rejected and why, is in `skills/frontend-aesthetics/references/sources.md`.
 
 `frontend-design` is what this plugin is meant to be used with. It does not replace it.
+
+## How this differs from ui-ux-pro-max
+
+The eight CSV datasets are vendored from ui-ux-pro-max-skill, so the data overlaps by design. What surrounds the data does not:
+
+- ui-ux-pro-max ships a CLI engine and wide catalogues (icons, Google Fonts, landing and React performance content). This plugin vendors only the eight design datasets, rewrites the lookup with name-weighted matching, and adds three things ui-ux-pro-max does not have: automatic WCAG contrast checks on every palette it reports, a severity-ranked tell scanner with a CI exit code, and the render-capture-diff loop that proves a change landed on screen.
+- If both are installed, both skills may fire on a UI task and the precedent lookup runs twice. Nothing conflicts — names, commands and data paths are separate — but one of the two is redundant; installing this plugin alone is enough.
 
 ## Install
 
@@ -125,11 +136,14 @@ python skills/frontend-aesthetics/scripts/image_diff.py shots/wide-1440x900-ligh
 
 If you installed the skill into an agent, run the same scripts from the installed skill folder, for example `~/.claude/skills/frontend-aesthetics/scripts/`.
 
-- `wcag.py FG BG ...` prints the contrast ratio for each pair, with verdicts for AA text (4.5:1), large text and UI (3:1) and AAA text (7:1). It accepts `#hex`, `rgb()` and `oklch()`. Out-of-gamut OKLCH values are clipped to sRGB, the same way a browser clips them.
-- `design_lookup.py "<English keywords>"` returns matching product types, styles, a contrast-checked palette, type pairings and reasoning rules from the vendored data. Use `--ux`, `--motion` and `--charts` for extra sections.
-- `slop_scan.py PATH ...` reports generic tells and craft defects as `blocking`, `important`, `review` or `polish`. It exits with status 1 when a blocking finding exists, so it can gate CI. Use `--json` for machine output.
-- `visual_capture.py URL --out DIR` shoots the page at one size, or a standard matrix with `--matrix` (1440x900, 1440x900 at 150%, 1100x720, 390x844). It shoots repeatedly until two consecutive frames are identical, so a half-rendered shell is not mistaken for a design, and prints JSON with each file, its colour count, the attempt count, and console errors. Exit 2 means no browser was found; exit 3 means the URL was rejected (only http/https, no leading `-`, and no private addresses without `--allow-private`).
-- `image_diff.py A.png B.png` decodes PNG with the standard library and reports the changed pixel count, ratio and bounding box. `--stats` summarises one or two images instead.
+- `wcag.py FG BG ...` prints the contrast ratio for each pair, with verdicts for AA text (4.5:1), large text and UI (3:1) and AAA text (7:1). It accepts `#hex`, `rgb()` and `oklch()`. Out-of-gamut OKLCH values are clipped to sRGB, the same way a browser clips them. `--apca` adds a draft APCA Lc value, marked as supplementary; the WCAG verdicts stay the gate.
+- `design_lookup.py "<keywords>"` returns matching product types, styles, a contrast-checked palette, type pairings and reasoning rules from the vendored data. Chinese keywords work through `data/zh-keywords.csv`; failed palette pairs come with suggested adjusted values marked "not applied". Use `--ux`, `--motion` and `--charts` for extra sections.
+- `slop_scan.py PATH ...` reports generic tells and craft defects as `blocking`, `important`, `review` or `polish`, honours line-level `/* slop-ignore: RULE-ID */` and a project `.sloprc`, and has a `--changed` mode for git. It exits with status 1 when a blocking finding exists, so it can gate CI. Use `--json` for machine output.
+- `token_lint.py PATH ...` audits token files: definition-site contrast, raw-value leaks with "use var(--token)" suggestions, missing semantic roles, unused tokens and off-scale values.
+- `visual_capture.py URL --out DIR` shoots the page at one size, or a standard matrix with `--matrix` (1440x900, 1440x900 at 150%, 1100x720, 390x844). Over CDP, `--dark` really emulates `prefers-color-scheme`, and `--full-page`, `--element`, `--hover`, `--focus` capture the states plain screenshots cannot; any CDP failure falls back to the legacy engine and the JSON says which engine ran. It shoots repeatedly until two consecutive frames are identical, so a half-rendered shell is not mistaken for a design. Exit 2 means no browser was found; exit 3 means the URL was rejected (only http/https, no leading `-`, and no private addresses without `--allow-private`).
+- `page_audit.py URL` walks the rendered page and audits every visible text pair: measurable pass/fail, and an explicit `uncertain` class for gradients, images, blend modes and occlusion instead of a guessed verdict.
+- `color_sim.py COLOR ...` simulates protanopia, deuteranopia and tritanopia (Machado 2009); `--check FG BG` reports whether a pair's contrast collapses under simulation.
+- `image_diff.py A.png B.png` decodes PNG with the standard library and reports the changed pixel count, ratio and bounding box; two directories run a baseline report. `--stats` summarises one or two images instead.
 
 On Windows, use `py -3` if `python` is not on PATH.
 
@@ -160,7 +174,8 @@ skills/frontend-aesthetics/
     critique.md             review procedure, nine pillars, severity, output
     visual-review.md        render, capture, read, re-diff
     sources.md              where each rule came from, and what was rejected
-  scripts/                  wcag, design_lookup, slop_scan, visual_capture, image_diff
+  scripts/                  wcag, design_lookup, slop_scan, token_lint, visual_capture,
+                            image_diff, page_audit, color_sim, cdp
   data/                     eight MIT-licensed CSV files from ui-ux-pro-max
 commands/                   optional slash commands
 tests/                      standard-library unit tests and fixtures
@@ -172,13 +187,13 @@ tests/                      standard-library unit tests and fixtures
 python -B -m unittest discover -s tests -v
 ```
 
-26 tests. They cover the contrast math against published reference values, OKLCH agreement with sRGB, name-weighted product matching, every scanner rule against a fixture that contains each defect, PNG decoding and exact diff geometry on generated fixtures, size-mismatch and non-PNG handling, decompression-bomb and oversized-dimension rejection, and the capture tool's URL validation (option-like strings, non-http schemes, private and link-local addresses, the explicit override). No test needs a network connection or a browser; the PNG fixtures are generated by `tests/make_fixtures.py`.
+The suite covers the contrast math against published reference values, the draft APCA implementation against anchors derived from the quoted source, OKLCH agreement with sRGB, the Machado simulation matrices (grey invariance, the red-to-olive anchor), name-weighted product matching, every scanner rule and token check against fixtures that contain each defect, the multi-line and suppression plumbing, PNG decoding and exact diff geometry on generated fixtures, size-mismatch and non-PNG handling, decompression-bomb and oversized-dimension rejection, the capture tool's URL validation (option-like strings, non-http schemes, private and link-local addresses, the explicit override), and the WebSocket/CDP protocol layer at byte level (handshake vector, frame layouts, fragmentation, limits, loopback guard). No test needs a network connection or a browser; the PNG fixtures are generated by `tests/make_fixtures.py`.
 
 ## Known limitations
 
 - The scanner finds patterns. It cannot judge taste, and each finding needs a human decision. For example, `outline: none` only matters when nothing replaces the focus style.
 - The palettes are starting points. Measured across all 192 rows, only one has a failing text pair, but 173 have a border below 3:1 and 30 have a primary fill below 3:1 against their background. Check the UI pairs before shipping.
-- Visual capture captures landed states. Hover, focus rings, open menus and mid-transition frames need a driving browser tool; this skill does not ship one.
+- Visual capture reaches hover, focus, element and full-page states over CDP; the legacy fallback engine only lands final states, and the JSON always says which engine ran. Open menus and mid-transition frames still need a driving browser tool.
 - `image_diff.py` is not a regression gate and decodes only non-interlaced 8-bit PNG. Other PNG variants are reported as unsupported rather than compared wrongly.
 - Without a browser installed, the visual step cannot run. The skill then requires the review to say "not visually verified" rather than describing a page it never saw.
 - Thresholds for durations, density and breakpoints are heuristics from practice, not standards. WCAG items are marked as such in `references/sources.md`.

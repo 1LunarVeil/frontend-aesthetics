@@ -51,6 +51,13 @@
 
 `frontend-design` 是本插件要配合使用的对象，不是被替代的对象。
 
+## 与 ui-ux-pro-max 的区别
+
+八个 CSV 数据集收录自 ui-ux-pro-max-skill，数据重叠是设计使然，数据之外的东西不重叠：
+
+- ui-ux-pro-max 带一个 CLI 引擎和更大的目录（图标、Google Fonts、落地页与 React 性能内容）。本插件只收录八个设计数据集，重写了查询（按名称加权匹配），并补上三样 ui-ux-pro-max 没有的东西：对报告的每条配色自动做 WCAG 对比度检查、带 CI 退出码的分级“AI 味”扫描器，以及证明改动真正落到屏幕上的渲染-截图-对比回路。
+- 两者同时安装时，两个技能可能同时触发、先例查询跑两遍。不会冲突——名称、命令、数据路径互不相干——但其中一个是冗余的，只装本插件就够了。
+
 ## 安装
 
 ### 通用：任何支持 Agent Skills 的 agent
@@ -121,11 +128,14 @@ python skills/frontend-aesthetics/scripts/visual_capture.py http://127.0.0.1:517
 python skills/frontend-aesthetics/scripts/image_diff.py shots/wide-1440x900-light@1.png shots2/wide-1440x900-light@1.png
 ```
 
-- `wcag.py FG BG ...` 输出每对颜色的对比度，并给出 AA 正文（4.5:1）、大字号与 UI（3:1）、AAA 正文（7:1）的判定。支持 `#hex`、`rgb()`、`oklch()`；超出 sRGB 的 OKLCH 会像浏览器一样被裁切。
-- `design_lookup.py "<英文关键词>"` 返回匹配的产品类型、样式、经过检查的配色、字体组合和推理规则；加 `--ux`、`--motion`、`--charts` 追加更多段落。
-- `slop_scan.py PATH ...` 把发现分为 `blocking`、`important`、`review`、`polish`；存在阻断级发现时退出码为 1，可用于 CI；加 `--json` 输出机器可读结果。
-- `visual_capture.py URL --out DIR` 抓单张，或加 `--matrix` 抓标准矩阵（1440×900、1440×900@150%、1100×720、390×844）。它会反复抓直到连续两帧完全相同，避免把半渲染的空壳当成设计；输出 JSON，含文件、颜色数、尝试次数与 console 错误。退出码 2 表示找不到浏览器，3 表示 URL 被拒绝（仅 http/https、不以 `-` 开头、私网地址需显式加 `--allow-private`）。
-- `image_diff.py A.png B.png` 用标准库解 PNG，输出变化像素数、比例和包围盒；加 `--stats` 只看单张统计。
+- `wcag.py FG BG ...` 输出每对颜色的对比度，并给出 AA 正文（4.5:1）、大字号与 UI（3:1）、AAA 正文（7:1）的判定。支持 `#hex`、`rgb()`、`oklch()`；超出 sRGB 的 OKLCH 会像浏览器一样被裁切。`--apca` 追加草案版 APCA Lc 值，标注为补充信息；WCAG 判定仍是唯一门禁。
+- `design_lookup.py "<关键词>"` 返回匹配的产品类型、样式、经过检查的配色、字体组合和推理规则。中文关键词经 `data/zh-keywords.csv` 映射；不达标的配色对附带调整建议值，并明确标注"仅建议，未应用"。加 `--ux`、`--motion`、`--charts` 追加更多段落。
+- `slop_scan.py PATH ...` 把发现分为 `blocking`、`important`、`review`、`polish`，支持行级 `/* slop-ignore: RULE-ID */` 与项目级 `.sloprc`，另有 `--changed` 只扫 git 变更文件。存在阻断级发现时退出码为 1，可用于 CI；加 `--json` 输出机器可读结果。
+- `token_lint.py PATH ...` 审计 token 文件：定义处的配色对对比度、裸值泄漏（带"该用 var(--token)"建议）、缺失语义角色、未使用 token、偏离刻度的值。
+- `visual_capture.py URL --out DIR` 抓单张，或加 `--matrix` 抓标准矩阵（1440×900、1440×900@150%、1100×720、390×844）。CDP 引擎下 `--dark` 真实模拟 `prefers-color-scheme`，`--full-page`、`--element`、`--hover`、`--focus` 抓普通截图够不到的状态；任何 CDP 失败自动降级旧引擎，JSON 里如实标注本次用的引擎。它会反复抓直到连续两帧完全相同，避免把半渲染的空壳当成设计。退出码 2 表示找不到浏览器，3 表示 URL 被拒绝（仅 http/https、不以 `-` 开头、私网地址需显式加 `--allow-private`）。
+- `page_audit.py URL` 遍历渲染页面，审计每一对可见文字：可测的给 pass/fail，渐变、图片、混合模式、遮挡这类算不准的显式归入 `uncertain`，绝不冒充判定。
+- `color_sim.py COLOR ...` 模拟红色盲、绿色盲、蓝黄色盲（Machado 2009）；`--check FG BG` 报告配色对的对比度在模拟后是否崩塌。
+- `image_diff.py A.png B.png` 用标准库解 PNG，输出变化像素数、比例和包围盒；传入两个目录则跑基线报告；加 `--stats` 只看单张统计。
 
 Windows 上若 `python` 不可用，改用 `py -3`。
 
@@ -156,8 +166,9 @@ skills/frontend-aesthetics/
     critique.md             评审流程、九个维度、严重度、输出格式
     visual-review.md        渲染、截图、读图、再对比
     sources.md              每条规则的来源，以及刻意未采用的内容
-  scripts/                  wcag、design_lookup、slop_scan、visual_capture、image_diff
-  data/                     ui-ux-pro-max 的八个 MIT CSV 文件
+  scripts/                  wcag、design_lookup、slop_scan、token_lint、visual_capture、
+                            image_diff、page_audit、color_sim、cdp
+  data/                     ui-ux-pro-max 的八个 MIT CSV 文件（另有自有的 zh-keywords.csv）
 commands/                   可选的斜杠命令
 tests/                      仅用标准库的单元测试与夹具
 ```
@@ -168,13 +179,13 @@ tests/                      仅用标准库的单元测试与夹具
 python -B -m unittest discover -s tests -v
 ```
 
-26 项测试：对比度算法对公开参考值的校验、OKLCH 与 sRGB 一致、产品名加权匹配、每条扫描规则对"缺陷夹具"的命中、PNG 解码与精确 diff 几何（用生成的夹具）、尺寸不一致与非 PNG 的处理、解压炸弹与超大尺寸的拒绝，以及截图工具的 URL 校验（选项式字符串、非 http 协议、私网与链路本地地址、显式放行）。测试不需要网络，也不需要浏览器；PNG 夹具由 `tests/make_fixtures.py` 生成。
+测试覆盖：对比度算法对公开参考值的校验、草案 APCA 实现对"引用源码推导锚点"的复现、OKLCH 与 sRGB 一致、Machado 模拟矩阵（灰度不变性、红→橄榄锚点）、产品名加权匹配、每条扫描规则与 token 检查对"缺陷夹具"的命中、多行标签与抑制机制、PNG 解码与精确 diff 几何（用生成的夹具）、尺寸不一致与非 PNG 的处理、解压炸弹与超大尺寸的拒绝、截图工具的 URL 校验（选项式字符串、非 http 协议、私网与链路本地地址、显式放行），以及 WebSocket/CDP 协议层的字节级测试（握手向量、帧布局、分片、上限、回环门禁）。测试不需要网络，也不需要浏览器；PNG 夹具由 `tests/make_fixtures.py` 生成。
 
 ## 已知边界
 
 - 扫描器只发现能用规则描述的模式，不判断"好不好看"。每条发现都需要人工确认。例如 `outline: none` 只有在没有替代焦点样式时才是问题。
 - 配色只是起点。192 行里只有 1 行的文字配对不达标，但有 173 行的边框低于 3:1、30 行的主色与背景低于 3:1。上线前必须复核 UI 配对。
-- 截图只抓稳态画面。hover、焦点环、展开菜单、过渡中间帧需要驱动型浏览器工具，本技能不带。
+- 截图经 CDP 可达 hover、焦点、元素裁剪与整页状态；降级后的旧引擎只抓稳态画面，JSON 里始终标明本次用的引擎。展开菜单、过渡中间帧仍需驱动型浏览器工具。
 - `image_diff.py` 不是回归门禁，且只解码非隔行 8 位 PNG；其他 PNG 变体会被报告为不支持，而不是错误比较。
 - 机器上没有浏览器时，视觉这一步跑不了。此时技能要求评审写"未做视觉验证"，而不是描述一个没见过的页面。
 - 时长、密度、断点的阈值来自经验的启发式，不是标准。属于 WCAG 的条目在 `references/sources.md` 里单独标注。

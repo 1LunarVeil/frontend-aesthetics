@@ -6,6 +6,7 @@ Run from the plugin root: python -B -m unittest discover -s tests -v
 
 import io
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -70,9 +71,10 @@ class LookupTests(unittest.TestCase):
         self.assertIn("text pairs failing:", out)
         self.assertIn("text Foreground on Background:", out)
 
-    def test_chinese_only_query_is_rejected(self):
-        code, _ = run(design_lookup.main, ["作品集"])
-        self.assertEqual(code, 2)
+    def test_chinese_query_resolves_via_mapping(self):
+        code, out = run(design_lookup.main, ["作品集"])
+        self.assertEqual(code, 0)
+        self.assertIn("# Detail: Portfolio/Personal", out)
 
     def test_unmatched_query_returns_one_and_lists_types(self):
         code, out = run(design_lookup.main, ["zzqqxx"])
@@ -82,20 +84,21 @@ class LookupTests(unittest.TestCase):
 
 class ScanTests(unittest.TestCase):
     def test_tells_fixture_triggers_expected_rules(self):
-        findings, scanned = slop_scan.scan([str(FIXTURES / "tells" / "index.html")])
+        findings, scanned, _ = slop_scan.scan([str(FIXTURES / "tells" / "index.html")])
         rules = {finding.rule for finding in findings}
         expected = {
             "A11Y-ZOOM", "A11Y-IMG-ALT", "A11Y-FOCUS-REMOVED", "A11Y-TABINDEX",
             "A11Y-REDUCED-MOTION", "TYPE-TINY", "TYPE-DEFAULT-PRIMARY", "TYPE-CAPS",
             "MOTION-ALL", "MOTION-GENERIC-ENTRANCE", "COLOR-PURPLE-GRADIENT",
-            "COLOR-PURE-BLACK", "COLOR-GREY-SHADOW", "COLOR-RAW-HEX", "COPY-LOREM",
+            "COLOR-PURE-BLACK", "COLOR-GREY-SHADOW", "COPY-LOREM",
             "COPY-GENERIC-ERROR", "COPY-SUBMIT", "COPY-ARROW-CTA", "COPY-MIDDOT-META",
+            "EMOJI-ICON", "HOVER-LIFT",
         }
         self.assertEqual(expected - rules, set())
         self.assertEqual(scanned, 1)
 
     def test_clean_fixture_has_no_blocking_or_important_findings(self):
-        findings, _ = slop_scan.scan([str(FIXTURES / "clean" / "app.css")])
+        findings, _, _ = slop_scan.scan([str(FIXTURES / "clean" / "app.css")])
         self.assertEqual([f for f in findings if f.severity in ("blocking", "important")], [])
 
     def test_comment_lines_are_not_scanned(self):
@@ -113,7 +116,7 @@ class ScanTests(unittest.TestCase):
         self.assertEqual(code, 0)
 
     def test_fixture_directories_are_skipped_when_scanning_a_folder(self):
-        _, scanned = slop_scan.scan([str(TESTS)])
+        _, scanned, _ = slop_scan.scan([str(TESTS)])
         self.assertEqual(scanned, 0)
 
 
@@ -258,6 +261,74 @@ class VisualCaptureUrlTests(unittest.TestCase):
             self.assertEqual(
                 visual_capture.validate_url(url, allow_private=True), url
             )
+
+
+class WsDTests(unittest.TestCase):
+    """Multi-line tags, suppression, the three new rules, and --changed plumbing."""
+
+    def test_multiline_img_tag_is_found_at_its_first_line(self):
+        findings = slop_scan.scan_text(Path("x.html"), '<div>\n<img\n  src="a.png">\n</div>\n')
+        img = [f for f in findings if f.rule == "A11Y-IMG-ALT"]
+        self.assertEqual([(f.line, f.severity) for f in img], [(2, "blocking")])
+
+    def test_inline_suppression_hides_only_that_rule_and_line(self):
+        text = '.a { transition: all 0.3s; /* slop-ignore: MOTION-ALL */ }\n.b { transition: all 0.3s; }\n'
+        findings = slop_scan.scan_text(Path("x.css"), text)
+        motion_all = [f for f in findings if f.rule == "MOTION-ALL"]
+        self.assertEqual([f.line for f in motion_all], [2])
+
+    def test_emoji_icon_is_review_level(self):
+        findings = slop_scan.scan_text(Path("x.html"), '<button>🚀 Blast off</button>\n')
+        self.assertEqual([(f.rule, f.severity) for f in findings], [("EMOJI-ICON", "review")])
+
+    def test_hover_lift_is_review_and_reports_the_selector_line(self):
+        text = '.card:hover {\n  transform: translateY(-4px);\n}\n'
+        findings = slop_scan.scan_text(Path("x.css"), text)
+        self.assertEqual([(f.rule, f.severity, f.line) for f in findings], [("HOVER-LIFT", "review", 1)])
+
+    def test_hover_on_color_change_only_does_not_fire(self):
+        findings = slop_scan.scan_text(Path("x.css"), '.btn:hover {\n  background: #1d4ed8;\n}\n')
+        self.assertEqual(findings, [])
+
+    def test_motion_uniform_fires_on_five_uniform_declarations(self):
+        texts = {
+            Path("a.css"): ".a { transition: opacity 0.3s; }\n.b { transition: opacity 0.3s; }\n",
+            Path("b.css"): ".c { transition: opacity 300ms; }\n.d { animation: spin 0.3s linear; }\n.e { transition: transform .3s; }\n",
+        }
+        findings = slop_scan._motion_uniform_findings(texts)
+        self.assertEqual([f.rule for f in findings], ["MOTION-UNIFORM"])
+        self.assertEqual(findings[0].severity, "review")
+
+    def test_motion_uniform_ignores_varied_or_few_declarations(self):
+        varied = {Path("a.css"): ".a { transition: opacity 0.15s; }\n.b { transition: opacity 0.3s; }\n.c { transition: opacity 450ms; }\n"}
+        self.assertEqual(slop_scan._motion_uniform_findings(varied), [])
+        few = {Path("a.css"): ".a { transition: opacity 0.3s; }\n.b { transition: opacity 0.3s; }\n"}
+        self.assertEqual(slop_scan._motion_uniform_findings(few), [])
+
+    def test_sloprc_ignores_rules_and_counts_suppressed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / ".sloprc").write_text('{"ignore_rules": ["TYPE-CAPS"]}', encoding="utf-8")
+            (root / "x.css").write_text(".a { text-transform: uppercase; }\n", encoding="utf-8")
+            findings, scanned, suppressed = slop_scan.scan([str(root)])
+            self.assertEqual((findings, scanned, suppressed), ([], 1, 1))
+
+    def test_sloprc_with_invalid_json_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / ".sloprc").write_text("{ not json", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                slop_scan.scan([str(root)])
+
+    def test_filter_changed_applies_code_test_and_root_filters(self):
+        files = slop_scan._filter_changed(
+            ["src/a.css", "tests/b.css", "README.md", "src/gone.css", "src/again.css"],
+            [Path("src")],
+            exists=lambda p: p.name != "gone.css" and p.name != "again.css",
+        )
+        self.assertEqual([str(f) for f in files], [str(Path("src/a.css"))])
+        files = slop_scan._filter_changed(["tests/b.css"], [], include_tests=True, exists=lambda p: True)
+        self.assertEqual([str(f) for f in files], [str(Path("tests/b.css"))])
 
 
 if __name__ == "__main__":

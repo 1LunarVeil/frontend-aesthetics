@@ -8,7 +8,7 @@ State the target: a file, a directory, a URL or screenshots. Read the project's 
 
 ## 2. Capture
 
-Use `references/visual-review.md`. In short: get the UI renderable, capture with `scripts/visual_capture.py` (it waits for two identical frames, so a half-rendered shell is not mistaken for a design), and look at the images. At minimum, capture the default, narrow and 150%-scale views; add empty, loading and error states and the dark theme when they exist.
+Use `references/visual-review.md`. In short: get the UI renderable, capture with `scripts/visual_capture.py` (it waits for two identical frames, so a half-rendered shell is not mistaken for a design), and look at the images. At minimum, capture the default, narrow and 150%-scale views; add empty, loading and error states, and capture the dark theme with `--dark` — over CDP this really emulates `prefers-color-scheme` instead of only naming the file. `--hover`, `--focus`, `--element` and `--full-page` capture the states the legacy engine could not reach; the JSON reports which engine ran, and a fallback to the legacy path is stated there honestly.
 
 Console errors count as failures. A `blank` capture counts as a failure. An unsettled capture is suspect.
 
@@ -17,7 +17,9 @@ Only when no browser can be reached at all, say "not visually verified", list th
 ## 3. Mechanical checks
 
 - `python scripts/slop_scan.py <paths>` over the UI source. Exit status 1 means blocking findings exist.
-- `python scripts/wcag.py FG BG ...` for each text and UI pair in the token file.
+- `python scripts/token_lint.py <paths>` when the project has a token file: it audits definition-site contrast, raw-value leaks (`RAW-LEAK` superseded the scanner's old raw-hex heuristic), missing semantic roles, unused tokens and off-scale values.
+- `python scripts/wcag.py FG BG ...` for each text and UI pair in the token file. `--apca` adds a draft APCA Lc reading; treat it as supplementary evidence, never as the gate.
+- `python scripts/page_audit.py <URL>` when the page can be served: it audits every visible text pair in the rendered page and separates measurable verdicts from uncertain ones. It supplements, never replaces, the capture loop.
 - The break test from `components-and-states.md`, run against the code paths for long or empty data, or in the browser with real data.
 
 The scanner finds patterns. Each hit still needs a judgement: `outline: none` is a problem only when no focus style replaces it, and an all-caps label can be right.

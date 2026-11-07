@@ -16,14 +16,15 @@ Do not describe a design as reviewed when none of these ran. Say "not visually v
 
 ```
 python scripts/visual_capture.py http://127.0.0.1:5173 --out shots --matrix
+python scripts/visual_capture.py http://127.0.0.1:5173 --out shots --dark --full-page --hover "button.primary"
 ```
 
-The tool finds a Chromium-family browser by absolute path only, then for each view shoots repeatedly until two consecutive frames are identical. It prints JSON with each file, its colour count, whether it settled, and any console errors.
+The tool finds a Chromium-family browser by absolute path only, then for each view shoots repeatedly until two consecutive frames are identical. It prints JSON with each file, its colour count, whether it settled, and any console errors. When a browser exists the capture runs over CDP with one persistent browser for the whole plan: `--dark` then really emulates `prefers-color-scheme` (the light and dark frames of the same view come out different, which is the proof), `--full-page` shoots past the fold, `--element`, `--hover` and `--focus` reach interaction states. Any CDP failure falls back to the legacy per-view engine and the JSON states it (`engine: "screenshot"`, `cdp_error`); the fallback cannot reach the interaction views, so a claim about them must say so.
 
 Why it works this way, from a real session:
 
 - A fixed 4s wait captured a half-rendered shell at one window size while a longer wait captured the same page complete. Never trust a single shot or a fixed delay.
-- The shell had 204 distinct colours and a full render had 837 to 1143. The blank test is colour count, not file size: the shell was a 12 KB file, comfortably "non-empty".
+- The shell had 204 distinct colours and a full render had 837 to 1143. The blank test is colour count, not file size: the shell was a 12 KB file, comfortably "non-empty". Dark themes legitimately produce fewer shades, so the dark threshold is lower; a toy page can still trip the heuristic, which is why `blank` marks a suspect shot and not a verdict.
 - A 390px viewport needed three attempts to settle. Report `settled: false` when it never does, and look at that shot with suspicion.
 
 If no browser is found, the tool exits 2 and says so. That is the honest outcome; do not substitute a guess.
@@ -67,7 +68,9 @@ Capture these when they exist. Skip any that need unavailable data, and say whic
 | error | copy quality and whether recovery is offered |
 | narrow window | clipping, overflow, collapsed navigation |
 | 150% scale | text fitting, touch targets, row height |
-| dark theme | the second theme usually gets no review |
+| dark theme | the second theme usually gets no review; `--dark` emulates it for real |
+| hover and focus states | where the cursor and keyboard actually land (`--hover`, `--focus`) |
+| full page | what lives below the fold (`--full-page`) |
 
 ## Report format
 

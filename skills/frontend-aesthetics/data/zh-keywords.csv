@@ -1,0 +1,155 @@
+zh,en_tokens,note
+作品集,portfolio,Portfolio/Personal and Creative Agency rows
+个人网站,portfolio personal,Portfolio/Personal
+创意机构,creative agency branding, Creative Agency
+营销机构,marketing campaign seo growth,Marketing Agency
+仪表盘,dashboard,dashboard rows by name match
+数据仪表盘,analytics dashboard kpi,Analytics Dashboard
+金融科技,fintech crypto blockchain,Fintech/Crypto (longest-match wins over 金融)
+金融,banking traditional finance,Banking/Traditional Finance
+银行,banking,Banking/Traditional Finance
+加密货币,crypto blockchain defi nft,Fintech/Crypto
+支付,payment,Fintech/Crypto keywords
+记账,budget expense tracker money,Personal Finance Tracker
+电商,ecommerce commerce,E-commerce
+网上商店,shop store ecommerce retail,E-commerce
+奢侈品,luxury premium elegant high-end,E-commerce Luxury and Luxury/Premium Brand
+企业服务,b2b enterprise consulting professional,B2B Service
+软件订阅,saas software subscription cloud,SaaS (General)
+独立开发,indie micro bootstrap solo,Micro SaaS
+医疗,medical health healthcare clinic,Healthcare App and Medical Clinic
+心理健康,mental health,Mental Health App
+健身,fitness gym workout exercise,Fitness/Gym App
+教育,education educational learning school,Educational App
+在线课程,course online learning,Online Course/E-learning
+语言学习,language learning,Language Learning App
+编程训练营,bootcamp coding,Coding Bootcamp
+儿童,children child kids,Educational App break-test context
+游戏,game gaming play entertainment,Gaming
+电子竞技,esports gaming,Gaming
+政务,government civic public administration,Government/Public Service
+社交,social media network sharing,Social Media App
+社区,community membership,Membership/Community
+效率,productivity task workflow tool,Productivity Tool
+项目管理,project task workflow,Productivity Tool
+协作,collaboration remote,Remote Work/Collaboration Tool
+人工智能,ai artificial-intelligence machine-learning chatbot,AI/Chatbot Platform
+聊天机器人,chatbot ai,AI/Chatbot Platform
+聊天,chat message messenger conversation,Chat & Messaging App
+即时通讯,chat messenger im realtime,Chat & Messaging App
+笔记,notes writing editor notebook,Notes & Writing App
+写作,writing editor articles,Notes & Writing App and Magazine/Blog
+博客,blog articles magazine writing,Magazine/Blog
+新闻,news media content,News/Media Platform
+杂志,magazine articles content,Magazine/Blog
+播客,podcast,Podcast Platform
+音乐,music streaming,Music Streaming
+视频,video streaming ott,Video Streaming/OTT
+直播,streaming realtime,Video Streaming/OTT
+天气,weather forecast temperature,Weather App
+旅游,travel tourism vacation adventure,Travel/Tourism Agency
+酒店,hotel hospitality,Hotel/Hospitality
+航空,airline flight booking airport,Airline
+机票,flight booking airline,Airline
+房产,real-estate property housing rent,Real Estate/Property
+法律,legal law attorney compliance,Legal Services
+保险,insurance,Insurance Platform
+物流,logistics delivery,Logistics/Delivery
+外卖,food delivery takeout order,Food Delivery / On-Demand
+餐厅,restaurant food dining menu reservation,Restaurant/Food Service
+菜谱,recipe cooking food kitchen,Recipe & Cooking App
+咖啡,cafe bakery,Bakery/Cafe
+烘焙,bakery,Bakery/Cafe
+酒庄,brewery winery,Brewery/Winery
+美容,spa beauty salon wellness skincare,Beauty/Spa/Wellness Service
+宠物,pet,Pet Tech App
+智能家居,smart home iot,Smart Home/IoT Dashboard
+汽车,automotive car dealership,Automotive/Car Dealership
+摄影,photography studio,Photography Studio
+婚礼,wedding event planning,Wedding/Event Planning
+活动,event conference meetup ticket,Event Management
+招聘,job recruitment board,Job Board/Recruitment
+自由职业,freelancer,Freelancer Platform
+数字商品,digital downloads,Digital Products/Downloads
+订阅盒子,subscription box recurring membership,Subscription Box Service
+会员,membership subscription,Membership/Community
+农业,agriculture farm,Agriculture/Farm Tech
+建筑,architecture construction,Construction/Architecture
+室内设计,interior architecture design,Architecture / Interior
+养老,senior elderly care,Senior Care/Elderly
+托育,childcare daycare,Childcare/Daycare
+药店,pharmacy drug store,Pharmacy/Drug Store
+牙科,dental,Dental Practice
+兽医,veterinary clinic,Veterinary Clinic
+花店,florist plant shop,Florist/Plant Shop
+教堂,church religious,Church/Religious Organization
+博物馆,museum gallery,Museum/Gallery
+影院,cinema theater,Theater/Cinema
+体育,sports team club,Sports Team/Club
+公益,charity non-profit,Non-profit/Charity
+冥想,meditation mindfulness calm wellness,Meditation & Mindfulness
+习惯打卡,habit tracker streak routine,Habit Tracker
+打车,ride taxi transport trip,Ride Hailing / Transportation
+知识库,knowledge base documentation,Knowledge Base/Documentation
+文档,documentation knowledge,Knowledge Base/Documentation
+开发者工具,developer tool ide dev,Developer Tool / IDE
+网络安全,cyber security,Cybersecurity Platform
+生物科技,biotech biology science,Biotech / Life Sciences
+航天,aerospace space,Space Tech / Aerospace
+量子,quantum computing,Quantum Computing Interface
+新能源,energy sustainable climate green carbon,Sustainable Energy / Climate Tech
+无人机,drone autonomous fleet,Autonomous Drone Fleet Manager
+生成艺术,generative art ai,Generative Art Platform
+空间计算,spatial vr ar immersive,Spatial Computing OS / App
+极简,minimalism minimal,Minimalism & Swiss Style
+瑞士,swiss,Minimalism & Swiss Style
+新拟态,neumorphism,Neumorphism
+玻璃拟态,glassmorphism,Glassmorphism
+粗野主义,brutalism brutal,Brutalism and Neubrutalism
+暗色,dark,Dark Mode (OLED) and Modern Dark
+鲜艳,vibrant bold,Vibrant & Block-based
+黏土,claymorphism clay,Claymorphism
+极光,aurora,Aurora UI
+复古,retro vintage analog,Retro-Futurism and Vintage Analog
+扁平,flat,Flat Design
+拟物,skeuomorphism,Skeuomorphism
+包豪斯,bauhaus,Bauhaus (包豪斯) row is bilingual in the data
+赛博朋克,cyberpunk,Cyberpunk UI and Cyberpunk Mobile HUD
+蒸汽波,vaporwave,Vaporwave
+像素,pixel art,Pixel Art
+终端,terminal cli,Terminal CLI (Mobile)
+手绘,sketch hand drawn,Sketch Hand-Drawn (Mobile)
+杂志排版,editorial magazine grid,Editorial Grid / Magazine
+单色,monochrome,Minimalist Monochrome
+自然,organic biophilic nature,Nature Distilled and Organic Biophilic
+动效,motion animation,Motion-Driven and motion.csv tiers
+图表,chart,charts.csv rows
+折线图,trend time line,Trend Over Time
+柱状图,compare categories bar,Compare Categories
+饼图,part whole pie proportional,Part-to-Whole and Proportional
+热力图,heatmap intensity,Heatmap / Intensity
+地图,geographic map,Geographic Data
+漏斗图,funnel flow conversion,Funnel / Flow
+散点图,correlation distribution scatter,Correlation / Distribution
+股票,stock trading ohlc,Stock / Trading OHLC
+预测,forecast time series,Time-Series Forecast and Predictive Analytics
+异常检测,anomaly detection,Anomaly Detection
+树状图,hierarchical nested,Hierarchical / Nested Data
+流向,flow process,Flow / Process Data
+情感,sentiment emotion,Sentiment / Emotion
+实时,real time streaming,Real-Time Streaming
+根因,root cause analysis,Root Cause Analysis
+导航,navigation,ux-guidelines Navigation rows
+搜索,search,ux-guidelines matches
+登录,login signup,ux-guidelines matches
+通知,notification,ux-guidelines matches
+无障碍,accessibility a11y,ux-guidelines matches
+表单,form,ux-guidelines matches
+错误,error,ux-guidelines matches
+加载,loading skeleton,ux-guidelines matches
+颜色,color,Color Palette Focus wording
+字体,typography font,typography.csv wording
+间距,spacing,layout wording
+深色模式,dark mode,Dark Mode (OLED)
+移动端,mobile,styles.csv Mobile rows
+响应式,responsive,ux-guidelines matches

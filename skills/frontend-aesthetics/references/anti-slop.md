@@ -2,7 +2,7 @@
 
 A "tell" is a choice that shows up on almost every generated interface because nobody made it for the brief. This list is not a ban list. A flagged default is fine once it has been chosen, and the question in each row is how to make that choice.
 
-The rule ID column matches `scripts/slop_scan.py`. Rows without a rule ID are judgement calls the scanner cannot see.
+The rule ID column matches `scripts/slop_scan.py`. Rows without a rule ID are judgement calls the scanner cannot see. Severities follow the floors: only accessibility-floor violations are blocking, craft defects are important, taste tells are review — a decision, not a defect.
 
 | Tell | Why it reads as a default | Ask instead | Rule |
 |---|---|---|---|
@@ -23,13 +23,13 @@ The rule ID column matches `scripts/slop_scan.py`. Rows without a rule ID are ju
 | 01, 02, 03 markers on content with no sequence | structure without a sequence | Is there really an order? | |
 | One headline word in italic or another color | emphasis for its own sake | Which single element deserves the emphasis? | |
 | Monospace for every small label | a technical flavour by default | Is this value code-like? Then mono; if not, sans. | |
-| Emoji as icons | inconsistent, unlabeled, platform-dependent | One icon family, labelled controls | |
+| Emoji as icons | inconsistent, unlabeled, platform-dependent | One icon family, labelled controls | EMOJI-ICON |
 | Text under 12px, gray on gray | low-effort contrast | Run `wcag.py` on the pair. | TYPE-TINY |
-| Raw hex, px or rgba values inside components | bypasses the tokens | Move the value into the token file. | COLOR-RAW-HEX |
+| Raw hex, px or rgba values inside components | bypasses the tokens | Move the value into the token file. | RAW-LEAK (token_lint) |
 | Lorem ipsum or invented metrics | placeholder left in | Use real data, or sample data that is labelled as sample. | COPY-LOREM |
 | Pure `#000` surfaces | a harsh default | A tinted near-black, unless the brief is brutalist. | COLOR-PURE-BLACK |
-| One duration for every transition | no motion decisions were made | Set a tier for each interaction. | |
-| Lift and shadow on every hover | a generic interaction | Change color or border only. | |
+| One duration for every transition | no motion decisions were made | Set a tier for each interaction. | MOTION-UNIFORM |
+| Lift and shadow on every hover | a generic interaction | Change color or border only. | HOVER-LIFT |
 | Glassmorphism, neon glow or bento grids for any product | trend picks | Does the trend help the job, or only the picture? | |
 | Layout-property transitions | jank and surprise | Animate transform or opacity. | MOTION-LAYOUT |
 

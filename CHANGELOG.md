@@ -2,6 +2,36 @@
 
 All notable changes to this project are recorded here. The format follows Keep a Changelog, and versions follow Semantic Versioning.
 
+## [0.1.3] - 2026-11-07
+
+The documented limitations became tools. Everything here is a repair or a supplement to existing capabilities, agreed with the maintainer as one release; it is not a redesign.
+
+### Added
+
+- `scripts/cdp.py`: a stdlib-only RFC 6455 WebSocket client and a thin CDP session layer — masked client frames, masked-server rejection, fragmentation assembly, strict UTF-8, a 64 MB message guard, and loopback-only endpoint validation reusing the capture tool's address checks. Pinned by byte-level protocol tests (the RFC 6455 §1.3 handshake vector, both extended-length tiers, every rejection path); no browser or network needed for them.
+- `visual_capture.py` over CDP: one persistent browser for the whole plan. `--dark` really emulates `prefers-color-scheme` — the light and dark frames of the same view come out different across the full viewport, which retires the old "`--theme` is recorded in the filename only" self-contradiction. `--full-page`, `--element`, `--hover` and `--focus` reach the states plain screenshots could not. Any CDP failure falls back to the legacy per-view engine, and the JSON reports which engine ran (`engine`, `cdp_error`). The blank heuristic is calibrated per theme, because dark pages legitimately produce fewer colours.
+- `scripts/page_audit.py`: a rendered-page contrast audit. Every visible text pair gets either a measurable verdict (with large-text thresholds) or an explicit `uncertain` class — gradient/image, blend/filter, occlusion, unparseable — never a guessed one. The canvas assumption is stated in the report header, and gradient detection is chain-aware (a gradient behind an opaque background stays measurable).
+- `scripts/token_lint.py`: token-file audits — definition-site contrast (`DEF-CONTRAST`, text pairs important, UI pairs review), `RAW-LEAK`, `MISSING-ROLES` (important when the project defines no tokens at all), `UNUSED-TOKEN` and `OFF-SCALE`. No rule here is blocking.
+- `scripts/color_sim.py`: Machado 2009 severity-10 simulation for protanopia, deuteranopia and tritanopia, applied in linear RGB as the model requires; `--check FG BG` reports whether a pair's contrast collapses under simulation — the runnable form of the "color never carries meaning alone" floor.
+- `wcag.py --apca`: draft APCA Lc with constants quoted verbatim from apca-w3 0.0.98G-4g, clearly marked supplementary; the WCAG verdicts in the same line remain the only gate.
+- `image_diff.py` baseline mode: two directories produce a per-pair report (identical, changed with bounding box, missing on either side, not comparable), still never a gate.
+- Chinese keywords in `design_lookup.py`: CJK runs are greedily longest-matched against `data/zh-keywords.csv` (original content, ~110 terms aimed at the real vocabulary of the vendored data), each match contributes its English tokens to the unchanged scoring, and matched terms are printed as a trace line. NFKC normalization folds full-width input. Every failing palette pair now also prints an adjusted suggestion marked "not applied" (deterministic binary search toward black or white), and hopeless pairs say to move the background instead.
+- The typography section names its own conflict: the Google Fonts CDN imports in the data contradict the CSP/self-host rule, so they are reference only.
+- A README section on how this plugin differs from ui-ux-pro-max, and the matching section in the Chinese README.
+- `SKILL.md` states that the skill stands alone when `frontend-design` is not installed.
+
+### Changed
+
+- **RAW-LEAK ownership.** The raw-hex heuristic left `slop_scan.py` (the rule ID `COLOR-RAW-HEX` is gone) and became `token_lint.py`'s token-aware `RAW-LEAK`: no threshold, and each raw value names the token it duplicates, if any. BREAKING for anything that matched on `COLOR-RAW-HEX`.
+- `slop_scan.py` joins multi-line tags before scanning, so an `<img>` whose attributes span lines no longer escapes `A11Y-IMG-ALT`; honours line-level `/* slop-ignore: RULE-ID */` and a project `.sloprc` (suppressed findings are counted in the summary); adds review-level `EMOJI-ICON`, `HOVER-LIFT` and the aggregate `MOTION-UNIFORM`; and has a `--changed` mode over git's changed and untracked files, with git anchored at the first given path. The severity philosophy is written down: only accessibility floors are blocking.
+- `design_lookup.py` exit semantics: a query that matches nothing — including Chinese terms outside the mapping table — now lists the product types and exits 1, where empty-token queries previously errored with exit 2.
+- Development workflow restored: the dev tree is the single source of truth again. The 0.1.2 release files (READMEs, this changelog, CONTRIBUTING, the PNG-bomb regression tests, `make_fixtures.py`, `.claude-plugin` manifest) were synced back from the release mirror, which had drifted ahead of the dev tree. A duplicated 0.1.0 section was removed from this changelog.
+
+### Fixed
+
+- `slop_scan.py --changed` ran git in the process working directory instead of the scanned path, so a repository given by path was reported as unavailable; it now anchors at the first path.
+- Tests caught the CDP client draft writing the WebSocket mask bit as a separate byte instead of folding it into the length byte — the byte-level fixture strategy paying for itself before any real browser run.
+
 ## [0.1.2] - 2026-11-02
 
 Security fix, found by a manual audit of the release repository.
@@ -68,21 +98,3 @@ First release.
 - The scanner finds patterns, not taste. Every finding needs a human judgement.
 - Palettes in the data are starting points: 173 of 192 rows have a border below 3:1, and 30 have a primary fill below 3:1, so UI pairs must be checked before use.
 - Reference screenshots are not included. Visual review needed a browser tool; the skill described it as optional.
-
-### Added
-
-- `frontend-aesthetics` skill: an eight-step workflow (read the project's rules, brief, precedents, direction, tokens, build, verify, report) with hard accessibility floors and a test for whether each default was chosen.
-- Nine reference documents: principles and the brief template, nine directions with contrast-verified starting palettes, color and type, layout and motion, components and states, desktop app rules, the anti-slop catalogue, the critique procedure, and sources.
-- `scripts/wcag.py`: WCAG contrast calculation for `#hex`, `rgb()` and `oklch()`, with reference values in the tests.
-- `scripts/design_lookup.py`: product-type precedents from vendored data, with name-weighted matching and per-palette contrast checks that separate text failures from UI failures.
-- `scripts/slop_scan.py`: read-only scan for generic-default tells and craft defects, with blocking, important, review and polish severities and a non-zero exit status when a blocking finding exists.
-- `commands/design-direction.md` and `commands/design-review.md` for agents that support slash commands.
-- Manifests for Claude Code (`.claude-plugin/`) and ZCode (`.zcode-plugin/`), plus plain `skills/` layout for Cursor, Codex, Copilot and any agent that reads Agent Skills.
-- Eight MIT-licensed CSV data files from ui-ux-pro-max, with provenance and a list of data caveats.
-- Unit tests using only the standard library, and a GitHub Actions workflow that runs them.
-
-### Known limitations
-
-- The scanner finds patterns, not taste. Every finding needs a human judgement.
-- Palettes in the data are starting points: 173 of 192 rows have a border below 3:1, and 30 have a primary fill below 3:1, so UI pairs must be checked before use.
-- Reference screenshots are not included. Visual review needs a browser tool; without one the review is code-only.
